@@ -31,8 +31,6 @@ void blinkLed(uint32_t led)
 {
     GPIOPinWrite(GPIO_PORTF_BASE,led,led);
     delayMs(500);
-    /*
     GPIOPinWrite(GPIO_PORTF_BASE,led,0);
     delayMs(500);
-    */
 }

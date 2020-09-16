@@ -8,6 +8,7 @@
 
 #include"FreeRtos.h"
 #include"task.h"
+#include "queue.h"
 
 /*Functions Declerations*/
 void receiveUART(void* pvParameter);
