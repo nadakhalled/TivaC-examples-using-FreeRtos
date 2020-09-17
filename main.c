@@ -11,7 +11,9 @@
 
 #define QUEUE_MAX_LENGTH 10
 
+/*Function declerations*/
 void intializeSystem(void);
+void TaskState(void *para);
 
 /*Global Variables*/
 uint32_t task1handle,task2handle,task3handle;
@@ -29,6 +31,7 @@ int main(void)
     uint16_t task1CreationPassed=xTaskCreate(sendColorsUART,"task1",1000,(void *)(queue1_handle),2,&task1handle);
     uint16_t task2CreationPassed=xTaskCreate(receiveUART,"task2",128,(void *)(queue1_handle),2,&task2handle);
     uint16_t task3CreationPassed=xTaskCreate(blinkLedTask,"task3",128,NULL,1,&task3handle);
+    uint16_t task4CreationPassed=xTaskCreate(TaskState,"debug",128,NULL,3,NULL);
     vTaskStartScheduler();
 
     while(1)
@@ -55,34 +58,20 @@ void intializeSystem(void)
 
 void TaskState(void *para)
 {
-    TaskStatus_t Details1,Details2; // 2 structs for task1 and 2
-    TaskStatus_t *pxTaskStatusArray;
-    volatile UBaseType_t number,x;
-    unsigned long ulTotalRunTime;
-    number =uxTaskGetNumberOfTasks();
-    pxTaskStatusArray = pvPortMalloc( number * sizeof( TaskStatus_t ) );
-    uxTaskGetSystemState( pxTaskStatusArray,number,&ulTotalRunTime );
-    UART0_SendString("Number of tasks = ");
-    UART0_SendInt(number);
-    UART0_Println();
-    for(x = 0 ; x < number ; x ++ )   //To print tasks names
-    {
-        UART0_SendString(pxTaskStatusArray[x].pcTaskName);
-        UART0_Println();
-    }
-
+    TaskStatus_t Details1,Details2,Details3;
     while(1)
     {
-        vTaskGetInfo(state1,&Details1, pdTRUE,eInvalid );
-        vTaskGetInfo(state2,&Details2, pdTRUE,eInvalid );
-        UART0_SendString(Details1.pcTaskName);
-        UART0_Println();
-        UART0_SendInt(Details1.eCurrentState);
-        UART0_Println();
-        UART0_SendString(Details2.pcTaskName);
-        UART0_Println();
-        UART0_SendInt(Details2.eCurrentState);
-        UART0_Println();
+        vTaskGetInfo(task1handle,&Details1, pdTRUE,eInvalid );
+        vTaskGetInfo(task2handle,&Details2, pdTRUE,eInvalid );
+        vTaskGetInfo(task3handle,&Details3, pdTRUE,eInvalid );
+        //UART0_SendString(Details1.pcTaskName);
+        //UART0_Println();
+        UARTCharPut(UART0_BASE,(char)(Details1.eCurrentState+'0'));
+        UARTCharPut(UART0_BASE,'\n');
+        UARTCharPut(UART0_BASE,(char)(Details2.eCurrentState+'0'));
+        UARTCharPut(UART0_BASE,'\n');
+        UARTCharPut(UART0_BASE,(char)(Details3.eCurrentState+'0'));
+        UARTCharPut(UART0_BASE,'\n');
         vTaskDelay(1000); //1 second
     }
 }

@@ -9,7 +9,7 @@ void receiveUART(void* pvParameter)
     while(1)
     {
         char color=4;
-        uint32_t receivedChar=UARTCharGet(UART0_BASE);
+        uint32_t receivedChar=UARTCharGetNonBlocking(UART0_BASE);
 
         switch(receivedChar)
           {
@@ -37,7 +37,8 @@ void receiveUART(void* pvParameter)
         if(color!=4)
             xQueueSendToBack(queue1_handle,&color,portMAX_DELAY);
 
-        vTaskDelayUntil( &xLastWakeTime, pdMS_TO_TICKS( 250 ) );
+        //vTaskDelayUntil( &xLastWakeTime, pdMS_TO_TICKS( 500 ) );
+        vTaskDelay(pdMS_TO_TICKS( 500 ) );
     }
 }
 
