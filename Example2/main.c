@@ -12,14 +12,34 @@
 #include "driverlib/sysctl.h"
 #include "driverlib/uart.h"
 
+#include "RtosTasks.h"
+
 /*Function declerations*/
 void intializeSystem(void);
+void GPIOF_HANDLER(void);
 
+/*Global vars*/
+TaskHandle_t task1Handle,task2Handle;
+SemaphoreHandle_t xBinarySemaphore;
 
 /*main.c*/
 int main(void)
 {
     intializeSystem();
+
+    /*creating binary semaphore*/
+    xBinarySemaphore=xSemaphoreCreateBinary();
+
+    /*Creating tasks and starting schedule*/
+    uint16_t task1CreationPassed=xTaskCreate(sendUARTTask,"task1",1000,NULL,1,&task1Handle);
+    uint16_t task2CreationPassed=xTaskCreate(switchHandlingTask,"task2",128,(void *)(xBinarySemaphore),2,&task2Handle);
+    vTaskStartScheduler();
+
+    while(1)
+    {
+
+    }
+
 	return 0;
 }
 
@@ -31,7 +51,6 @@ void intializeSystem(void)
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
     SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);
-    IntMasterEnable();
 
     /*intializing leds*/
     GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE,GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3);
@@ -53,5 +72,14 @@ void intializeSystem(void)
 /*GPIOF handler*/
 void GPIOF_HANDLER(void)
 {
-
+    uint32_t interruptStatus=GPIOIntStatus(GPIO_PORTF_BASE,true);
+    if((interruptStatus & GPIO_INT_PIN_0) == GPIO_INT_PIN_0)
+    {
+        GPIOIntClear(GPIO_PORTF_BASE,GPIO_PIN_0);
+        UART_sendString("Interrupt received\n");
+        /*Defering the interrupt handling to handler task*/
+        BaseType_t xHigherPriorityTaskWoken=pdFALSE;
+        xSemaphoreGiveFromISR( xBinarySemaphore, &xHigherPriorityTaskWoken );
+        portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+    }
 }
