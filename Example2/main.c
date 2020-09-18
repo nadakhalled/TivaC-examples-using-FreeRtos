@@ -16,11 +16,12 @@
 void intializeSystem(void);
 void GPIOF_HANDLER(void);
 void traceTasks(void *para);
-
+static void prvAutoReloadTimerCallback( TimerHandle_t xTimer );
 
 /*Global vars*/
 TaskHandle_t task1Handle,task2Handle,task3Handle,task4Handle;
 SemaphoreHandle_t xBinarySemaphore,xCountingSemaphore,xMutexLed,xMutexPrint;
+TimerHandle_t timerHandle;
 
 printingTaskParams task1Params,task2Params;
 switchHandlingTaskParams task3Params={0,0,GPIO_PIN_3};
@@ -36,6 +37,11 @@ int main(void)
     xCountingSemaphore=xSemaphoreCreateCounting(10,0);
     xMutexLed=xSemaphoreCreateMutex();
     xMutexPrint=xSemaphoreCreateMutex();
+
+    /*creating SW timer and starting it*/
+    uint32_t timerID;
+    timerHandle=xTimerCreate("Timer1",pdMS_TO_TICKS(1000),pdTRUE,&timerID,prvAutoReloadTimerCallback);
+    xTimerStart(timerHandle,0);
 
     /*Creating tasks and starting schedule*/
     /*Filling in the required params for tasks*/
@@ -133,4 +139,21 @@ void traceTasks(void *para)
         UART_sendString("\r\n");
         vTaskDelay(1000); //1 second
     }
+}
+
+/*Autoreload timer callback function
+ * params:
+ *  -Timer: the handle of the timer that calls this callback function
+ */
+static void prvAutoReloadTimerCallback( TimerHandle_t xTimer )
+{
+    static bool isOn=0;
+
+    if(isOn)
+        GPIOPinWrite(GPIO_PORTF_BASE,GPIO_PIN_1,GPIO_PIN_1);
+    else
+        GPIOPinWrite(GPIO_PORTF_BASE,GPIO_PIN_1,0);
+
+    isOn=!isOn;
+
 }
