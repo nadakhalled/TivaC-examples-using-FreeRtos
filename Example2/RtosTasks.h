@@ -15,14 +15,23 @@
 #include"task.h"
 
 /*Struct that defines the parameters passed to switchHandlingTask
- * handle: the handle of the semaphore to take before execution
+ * Semaphorehandle: the handle of the semaphore to take before execution
  * pin: the digital pin to write in PORTF
  * */
 typedef struct{
-    SemaphoreHandle_t handle;
+    SemaphoreHandle_t semaphoreHandle;
+    SemaphoreHandle_t mutexHandle;
     uint8_t pin;
 } switchHandlingTaskParams;
 
+/*Struct that defines the parameters passed to sendUARTTask
+ * mutexHandle: the handle of the mutex to take before using UART resource
+ * stringToPrint: pointer to the string that needs to be sent to UART
+ * */
+typedef struct{
+    SemaphoreHandle_t mutexHandle;
+    char* stringToSend;
+} printingTaskParams;
 
 /*Functions Declerations*/
 
